@@ -4,9 +4,10 @@ import { credentialsContext } from "../App";
 import TodoInputForm from "../components/TodoInputForm"
  
 function Welcome () {
-    const [credentials] = useContext(credentialsContext)
+    const [credentials,setCredentials] = useContext(credentialsContext)
     return(
         <>
+        {credentials && <button onClick={()=>(setCredentials(null))}>Logout</button>}
         <h1>Welcome {credentials && credentials.username}</h1>
         {!credentials && <Link to="/register">Register</Link>}
         <br />
