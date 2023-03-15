@@ -72,6 +72,168 @@ app.post("/login", async (req, res) => {
 });
 
 
+app.post("/todo", async (req, res) => { 
+    console.log("i m in server.js ------ for todo---POST method");
+    const client = new MongoClient(uri);
+    const database = client.db('Todolist');
+    const users = database.collection('users');
+    const userAndTodoList = database.collection('userAndTodoList');
 
+    // check if user is already exist or not..
+    const {authorization} = req.headers;
+    const todoListItems = req.body;
+    console.log(todoListItems);
+    const [, token] = authorization.split(" ");
+    const [ username, password ] = token.split(":");
+
+    console.log("------", username, " ", password, "---------");
+    const user = await users.findOne({username:username});
+    if(!user || user.password !== password){
+        console.log("invalid  access -- bad username or password");
+        res.status(403);
+        res.json({
+            message: "invalid login -- bad username or password"
+        })
+        return;
+    }
+    console.log("userrrrrrrrrrr",user);
+    const doesUserandTodoListExists =  await userAndTodoList.findOne({userId: user._id});
+    console.log(doesUserandTodoListExists);
+    if(!doesUserandTodoListExists){
+        await userAndTodoList.insertOne({
+            userId: user._id,
+            todoList: todoListItems,
+        });
+    }
+    else{
+        console.log("user found................")
+        const filter = {userId:user._id};
+        const updateDoc = {
+            $set: {
+                todoList: todoListItems
+            }
+        };
+        console.log(filter);
+        console.log(updateDoc);
+
+        const options = { upsert: true };
+        await userAndTodoList.updateOne(filter, updateDoc, options);
+    }
+    console.log(await userAndTodoList.findOne({userId: user._id}));
+
+    res.json({
+        message: "Successfull"
+    })
+    client.close();
+});
+
+app.get("/todo", async (req, res) => { 
+    console.log("i m in server.js ------ for todo---GET method");
+    const client = new MongoClient(uri);
+    const database = client.db('Todolist');
+    const users = database.collection('users');
+    const userAndTodoList = database.collection('userAndTodoList');
+
+    // check if user is already exist or not..
+    const {authorization} = req.headers;
+    const [, token] = authorization.split(" ");
+    const [ username, password ] = token.split(":");
+
+    console.log("------", username, " ", password, "---------");
+    const user = await users.findOne({username:username});
+    if(!user || user.password !== password){
+        console.log("invalid  access -- bad username or password");
+        res.status(403);
+        res.json({
+            message: "invalid login -- bad username or password"
+        })
+        return;
+    }
+    console.log(" legit user found................")
+    const doesUserAndTodoListExists =  await userAndTodoList.findOne({userId: user._id});
+    
+    if(doesUserAndTodoListExists){
+        const todos = doesUserAndTodoListExists.todoList;
+        console.log(todos);
+        res.json(todos);
+    }
+    client.close();
+});
+
+
+app.post("/todo_categories", async (req, res) => {
+    console.log("i m in server ------- todo_categoriees");
+    const client = new MongoClient(uri);
+    const database = client.db('Todolist');
+    const users = database.collection('users');
+    const category = database.collection('taskCategories');
+
+    const {authorization} = req.headers;
+    const newCategoryList = req.body;
+    const [, token] = authorization.split(" ");
+    const [username, password] = token.split(":");
+
+    const user = await users.findOne({username:username});
+    if(!user || password !== password){
+        console.log("invalid  access -- bad username or password");
+        res.status(403);
+        res.json({
+            message: "invalid login -- bad username or password"
+        })
+        return;
+    }
+    console.log(" legit user found................");
+
+    const doesCategoryExists = await category.findOne({userId: user.id});
+    if(!doesCategoryExists){
+        console.log("category does not exist");
+        await category.insertOne({
+            userId: user._id,
+            taskCategory: newCategoryList
+        })
+    }
+    else{
+        console.log("yes --- category exists");
+        await category.updateOne({userId: user._id}, {$set: {taskCategory:newCategoryList}}) 
+    }
+    console.log(await category.findOne({userId: user._id}));
+    res.json({
+        message: "Successfull"
+    })
+    client.close();
+})
+
+
+
+app.get("/todo_categories", async (req, res) => {
+    console.log("i m in server ------- todo_categoriees");
+    const client = new MongoClient(uri);
+    const database = client.db('Todolist');
+    const users = database.collection('users');
+    const category = database.collection('taskCategories');
+
+    const {authorization} = req.headers;
+    const [, token] = authorization.split(" ");
+    const [username, password] = token.split(":");
+
+    const user = await users.findOne({username:username});
+    if(!user || password !== password){
+        console.log("invalid  access -- bad username or password");
+        res.status(403);
+        res.json({
+            message: "invalid login -- bad username or password"
+        })
+        return;
+    }
+    console.log(" legit user found................");
+
+    const doesCategoryExists = await category.findOne({userId: user._id});
+
+    if(doesCategoryExists){
+        console.log(doesCategoryExists);
+        res.json(doesCategoryExists.taskCategory);
+    }
+    client.close();
+})
 
 app.listen(port,'localhost');
