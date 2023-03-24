@@ -1,70 +1,78 @@
-import React, {
-  useContext,
-  useEffect,
-} from "react";
+import React, { useContext, useEffect } from "react";
 import { useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { credentialsContext } from "../App";
+import TodoDisplayComponent from "./TodoDisplayComponent";
+import "./TodoInputForm.css";
+
+export const todoListContext = React.createContext(null);
 
 let id_count = 0;
+let milestone_count = 0;
 function TodoInputForm() {
   const [todoList, setTodoList] = useState([]);
-  const [categoriesList, setCategoriesList] = useState(["long goals","short goals", "wishlists"]);
+  const todoitem = todoList;
+  console.log("todoitem :  " , todoitem);
+  const [categoriesList, setCategoriesList] = useState([
+    "long goals",
+    "short goals",
+    "wishlists",
+  ]);
   const [currentCategory, setCurrentCategory] = useState("");
   const [addNewCategoryStatus, setAddNewCategoryStatus] = useState(false);
+  const [addNewMilestoneStatus, setAddNewMilestoneStatus] = useState(false);
+  const [milestoneList, setMilestoneList] = useState([]);
+  const [milestoneListStatus, setMilestoneListStatus] = useState([]);
 
   const [currentDate, setNewDate] = useState(null);
   const [quote, setQuote] = useState(null);
 
+  // const [credentials] = useContext(credentialsContext);
+  // const todo_postToServer = (newTodoList) => {
+  //   fetch("http://localhost:4000/todo", {
+  //     method: "POST",
+  //     headers: {
+  //       "Content-Type": "application/json",
+  //       Authorization: `Basic ${credentials.username}:${credentials.password}`,
+  //     },
+  //     body: JSON.stringify(newTodoList),
+  //   }).then(() => {});
+  // };
 
-  const [credentials] = useContext(credentialsContext);
-  const todo_postToServer = (newTodoList) => {
-    fetch("http://localhost:4000/todo", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Basic ${credentials.username}:${credentials.password}`,
-      },
-      body: JSON.stringify(newTodoList),
-    }).then(() => {});
-  };
+  // useEffect(() => {
+  //   fetch("http://localhost:4000/todo", {
+  //     method: "GET",
+  //     headers: {
+  //       "Content-Type": "application/json",
+  //       'Authorization': `Basic ${credentials.username}:${credentials.password}`
+  //     }
+  //   })
+  //   .then((response) => response.json())
+  //   .then(findUserAndTodoList => setTodoList(findUserAndTodoList))
+  // }, [])
 
-  useEffect(() => {
-    fetch("http://localhost:4000/todo", {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        'Authorization': `Basic ${credentials.username}:${credentials.password}`
-      }
-    })
-    .then((response) => response.json())
-    .then(findUserAndTodoList => setTodoList(findUserAndTodoList))
-  }, [])
-
-
-  const category_postToServer = (newCategoriesList) => {
-    fetch("http://localhost:4000/todo_categories", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Basic ${credentials.username}:${credentials.password}`,
-      },
-      body: JSON.stringify(newCategoriesList),
-    }).then(() => {});
-  };
-  useEffect(() => {
-    fetch("http://localhost:4000/todo_categories", {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        'Authorization': `Basic ${credentials.username}:${credentials.password}`
-      }
-    })
-    .then((response) => response.json())
-    .then(categoryList => setCategoriesList(categoryList))
-  }, [])
-
+  // const category_postToServer = (newCategoriesList) => {
+  //   fetch("http://localhost:4000/todo_categories", {
+  //     method: "POST",
+  //     headers: {
+  //       "Content-Type": "application/json",
+  //       Authorization: `Basic ${credentials.username}:${credentials.password}`,
+  //     },
+  //     body: JSON.stringify(newCategoriesList),
+  //   }).then(() => {});
+  // };
+  // useEffect(() => {
+  //   fetch("http://localhost:4000/todo_categories", {
+  //     method: "GET",
+  //     headers: {
+  //       "Content-Type": "application/json",
+  //       'Authorization': `Basic ${credentials.username}:${credentials.password}`
+  //     }
+  //   })
+  //   .then((response) => response.json())
+  //   .then(categoryList => setCategoriesList(categoryList))
+  // }, [])
 
   const handleAddNewCategory = () => {
     console.log("inside handleaddnewcategory");
@@ -73,7 +81,27 @@ function TodoInputForm() {
     setCategoriesList([...categoriesList, newCategory]);
     document.getElementById("category_text").value = "";
     setAddNewCategoryStatus(false);
-    category_postToServer(newCategoriesList);
+    // category_postToServer(newCategoriesList);
+  };
+  const handleAddNewMilestone = () => {
+    console.log("inside handleaddnewmilestone");
+    const milestone_text = document.getElementById("milestone_text").value;
+    milestone_count = milestone_count + 1;
+    const newMilestone = {
+      milestoneId: milestone_count,
+      milestoneText: milestone_text,
+      milestoneStatus: false,
+    };
+    const newMilestoneList = [...milestoneList, newMilestone];
+    setMilestoneList([...milestoneList, newMilestone]);
+    // setMilestoneListStatus([...milestoneListStatus, false]);
+    alert("Milestone added..");
+    document.getElementById("milestone_text").value = "";
+    document.getElementById("milestone_text").placeholder =
+      "Add another Milestone";
+
+    console.log(newMilestoneList);
+    // category_postToServer(newCategoriesList);
   };
 
   const addNewTodo = (e) => {
@@ -87,34 +115,38 @@ function TodoInputForm() {
       task: quote,
       taskDoneStatus: 0,
       taskDropStatus: 0,
+      milestones: milestoneList,
     };
     const newTodoList = [...todoList, newTodo];
     setTodoList(newTodoList);
     setCurrentCategory("");
     setNewDate(null);
     setQuote(null);
+    setMilestoneList([]);
     document.getElementById("quote_text").value = "";
     console.log(newTodoList);
-    todo_postToServer(newTodoList);
+    milestone_count = 0;
+    // console.log()
+    // todo_postToServer(newTodoList);
   };
 
-  const handleTaskStatus = (index, isDone) => {
-    const idx = index - 1;
-    const beforeIdxTodo = todoList.slice(0, idx);
-    const afterIdxTodo = todoList.slice(idx + 1);
-    const idxTodo = todoList.slice(idx, idx + 1);
+  // const handleTaskStatus = (index, isDone) => {
+  //   const idx = index - 1;
+  //   const beforeIdxTodo = todoList.slice(0, idx);
+  //   const afterIdxTodo = todoList.slice(idx + 1);
+  //   const idxTodo = todoList.slice(idx, idx + 1);
 
-    if (isDone) {
-      idxTodo[0].taskDoneStatus = !idxTodo[0].taskDoneStatus;
-    } else {
-      idxTodo[0].taskDropStatus = !idxTodo[0].taskDropStatus;
-    }
-    const newTodoList = [...beforeIdxTodo, ...idxTodo, ...afterIdxTodo];
-    console.log(todoList);
-    console.log(newTodoList);
-    setTodoList(newTodoList);
-    todo_postToServer(newTodoList);
-  };
+  //   if (isDone) {
+  //     idxTodo[0].taskDoneStatus = !idxTodo[0].taskDoneStatus;
+  //   } else {
+  //     idxTodo[0].taskDropStatus = !idxTodo[0].taskDropStatus;
+  //   }
+  //   const newTodoList = [...beforeIdxTodo, ...idxTodo, ...afterIdxTodo];
+  //   console.log(todoList);
+  //   console.log(newTodoList);
+  //   setTodoList(newTodoList);
+  //   // todo_postToServer(newTodoList);
+  // };
 
   return (
     <>
@@ -178,26 +210,51 @@ function TodoInputForm() {
           placeholder="Add Quote"
           onChange={(e) => setQuote(e.target.value)}
         ></input>
-
-        {/* :::TODO::: not working */}
-        {/* <button
-          onClick={() => {
-            const quote_text = document.getElementById("quote").value;
-            setNewQuote(quote_text);
-            document.getElementById("quote").value = " ";
-          }}
-        >
-          Add Quote
-        </button> */}
+        <br />
+        {!addNewMilestoneStatus && (
+          <button onClick={() => setAddNewMilestoneStatus(true)}>
+            Add milestones
+          </button>
+        )}
+        {addNewMilestoneStatus && (
+          <div>
+            <input id="milestone_text" placeholder="Add Milestone"></input>
+            <button onClick={handleAddNewMilestone} type="button">
+              Add
+            </button>
+            <button
+              onClick={() => setAddNewMilestoneStatus(false)}
+              type="button"
+            >
+              Close
+            </button>
+          </div>
+        )}
+        <br></br>
+        <br />
+        <div className="form_preview">
+          <h4>FORM REVIEW</h4>
+          {currentCategory && <h5>Selected Category: {currentCategory}</h5>}
+          {quote && <p>Added Goal: {quote}</p>}
+          {currentDate && (
+            <p>Current Date: {currentDate.toLocaleDateString()}</p>
+          )}
+          {milestoneList[0] && (
+            <div>
+              <h4>---Miilestones List---</h4>
+              <ul>
+                {milestoneList?.map((item) => (
+                  <li>{item.milestoneText}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
 
         <br />
+        <br></br>
         <button type="submit">Add Todo</button>
       </form>
-      <div>
-        {currentCategory && <h5>{currentCategory}</h5>}
-        {quote && <p>{quote}</p>}
-        {currentDate && <p>{currentDate.toLocaleDateString()}</p>}
-      </div>
 
       <br />
       {/* <DisplayTodoList todoList={todoList}></DisplayTodoList> */}
@@ -207,42 +264,12 @@ function TodoInputForm() {
       <br />
 
       <h2>List of all TODO's</h2>
-      <ul>
-        {todoList?.map((item, i) => (
-          <div>
-            {item.taskDoneStatus == 1 && (
-              <li className="done" key={i}>
-                {item.todoId} &nbsp;&nbsp; {item.category} &nbsp;&nbsp;{" "}
-                {new Date(item.dueDate).toLocaleDateString()} &nbsp;&nbsp; {item.task}
-                <h3>STATUS: done</h3>
-              </li>
-            )}
-
-            {item.taskDropStatus == 1 && (
-              <li className="drop" key={i}>
-                {item.todoId} &nbsp;&nbsp; {item.category} &nbsp;&nbsp;{" "}
-                {new Date(item.dueDate).toLocaleDateString()} &nbsp;&nbsp; {item.task}
-                <h3>STATUS: drop</h3>
-              </li>
-            )}
-
-            {item.taskDoneStatus == 0 && item.taskDropStatus == 0 && (
-              <li className="none" key={i}>
-                {item.todoId} &nbsp;&nbsp; {item.category} &nbsp;&nbsp;{" "}
-                {new Date(item.dueDate).toLocaleDateString()} &nbsp;&nbsp; {item.task}
-                <h3>STATUS: none</h3>
-                {/* 1 for done and 0 for drop */}
-                <button onClick={() => handleTaskStatus(item.todoId, 1)}>
-                  Done
-                </button>
-                <button onClick={() => handleTaskStatus(item.todoId, 0)}>
-                  Drop
-                </button>
-              </li>
-            )}
-          </div>
-        ))}
-      </ul>
+      
+      <todoListContext.Provider value={[todoList, setTodoList]}>
+        <h5>inside components</h5>
+        <TodoDisplayComponent></TodoDisplayComponent>
+      </todoListContext.Provider>
+      <h5>end of components</h5>
     </>
   );
 }
