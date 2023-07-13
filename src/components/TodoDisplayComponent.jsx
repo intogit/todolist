@@ -1,48 +1,73 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import TodoInputForm, { todoListContext } from "./TodoInputForm";
+import { credentialsContext } from "../App";
+import "./TodoDisplayComponent.css"
+import { renderTodoDisplayComponentContext } from "../pages/Dashboard";
 
 function TodoDisplayComponent() {
-  const [todoList, setTodoList] = useContext(todoListContext);
-  console.log("tododislaycomoemtfgfgcjvbljbjbjkbj", todoList);
-  const handleTaskStatus = (index, isDone) => {
-    // const idx = index - 1;
-    // const beforeIdxTodo = todoList.slice(0, idx);
-    // const afterIdxTodo = todoList.slice(idx + 1);
-    // const idxTodo = todoList.slice(idx, idx + 1);
-    const todos = todoList;
-    console.log("before------==", todoList);
-    // todoList[index-1].taskDoneStatus = !todoList[index-1].taskDoneStatus;
-    if (isDone) {
-      todos[index - 1].taskDoneStatus = !todos[index - 1].taskDoneStatus;
-      // idxTodo[0].taskDoneStatus = !idxTodo[0].taskDoneStatus;
-    } else {
-      todos[index - 1].taskDropStatus = !todoList[index - 1].taskDropStatus;
-      // idxTodo[0].taskDropStatus = !idxTodo[0].taskDropStatus;
-    }
-    // const newTodoList = [...beforeIdxTodo, ...idxTodo, ...afterIdxTodo];
-    // console.log(todoList);
-    // console.log(newTodoList);
-    // setTodoList(newTodoList);
-    console.log("after----------===", todoList);
-    setTodoList([...todos]);
-    // todo_postToServer(newTodoList);
+  const [todoList, setTodoList] = useState([]);
+  // const [todoList, setTodoList] = useContext(todoListContext);
+  const [renderTodoDisplay, setRenderTodoDisplay] = useContext(renderTodoDisplayComponentContext);
+  const [credentials] = useContext(credentialsContext);
+
+
+  useEffect(() => {
+    setRenderTodoDisplay(false);
+    fetch("http://localhost:4000/todo", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        'Authorization': `Basic ${credentials.userName}:${credentials.password}`
+      }
+    })
+    .then((response) => response.json())
+    .then(findUserAndTodoList => setTodoList(findUserAndTodoList))
+  }, [renderTodoDisplay]);
+
+
+  const todo_postToServer = (newTodoList) => {
+    fetch("http://localhost:4000/todo", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Basic ${credentials.userName}:${credentials.password}`,
+      },
+      body: JSON.stringify(newTodoList),
+    }).then(() => {});
   };
+
+  const handleTaskStatus = (index, isDone) => {
+    const todos = todoList;
+    if (isDone) {
+      todos[index - 1].taskDoneStatus = !todos[index - 1].taskDoneStatus;  
+    } 
+    else {
+      todos[index - 1].taskDropStatus = !todoList[index - 1].taskDropStatus;
+    }
+    setTodoList([...todos]);
+    todo_postToServer(todos);
+  };
+
 
   const handleMilestoneDoneStatus = (todoId, milestoneId) => {
     const todos = todoList;
     const todo = todos[todoId - 1];
-    console.log(todo);
-    console.log(todos);
     todo.milestones[milestoneId - 1].milestoneStatus =
       !todo.milestones[milestoneId - 1].milestoneStatus;
     todos[todoId - 1] = todo;
+    // if all the milestone is achieved, task is done
+    let taskDoneStatus = true;
+    // let n = todo.mile
+    while(todo.milestones.milestoneStatus == false){taskDoneStatus = false;}
+    if(taskDoneStatus) handleTaskStatus(todoId, 1);
     setTodoList([...todos]);
+    todo_postToServer(todos);
   };
   const [isActiveMilestone, setIsActiveMilestone] = useState(false); 
 
   return (
     <>
-      <h3>List of Todo List</h3>
+      <h3 className="displayTitle">My Tasks</h3>
 
       <ul>
         {todoList?.map((item, i) => (
@@ -70,20 +95,21 @@ function TodoDisplayComponent() {
                 {item.todoId} &nbsp;&nbsp; {item.category} &nbsp;&nbsp;{" "}
                 {new Date(item.dueDate).toLocaleDateString()} &nbsp;&nbsp;{" "}
                 {item.task}
-                {/* :::TODO::: -- ADD A MUI - {https://mui.com/material-ui/react-stepper/#vertical-stepper}
+                {/* :::TODO:::
+                 -- ADD A MUI - {https://mui.com/material-ui/react-stepper/#vertical-stepper} --- will use timeline....
                 create a button Milestonesand onclick it display it using mui stepper and beside it display the progress... mui */}
                 <h3>STATUS: none</h3>
                 {/* 1 for done and 0 for drop */}
                 {/* if there is any milestone, taskDoneStatus will be true only when all the milestone are completed */}
                 
-                <button onClick={() => (setIsActiveMilestone(!isActiveMilestone))}>Milestones \/</button>
+                <button onClick={() => (setIsActiveMilestone(!isActiveMilestone))}>--Milestones Checklists--</button>
                 {isActiveMilestone && item.milestones[0] && (
                   <div>
                     <ul>
                       {item.milestones.map((milestone, i) => (
                         <li>
                           {milestone.milestoneText}
-                          {milestone.milestoneStatus && <h5>done man!</h5>}
+                          {milestone.milestoneStatus && <h5>done</h5>}
                           {!milestone.milestoneStatus && (
                             <button
                               type="button"
@@ -94,7 +120,7 @@ function TodoDisplayComponent() {
                                 );
                               }}
                             >
-                              Achieved ?
+                              &nbsp; -- ?? Achieved ??
                             </button>
                           )}
                         </li>

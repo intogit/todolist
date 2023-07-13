@@ -5,6 +5,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import { credentialsContext } from "../App";
 import TodoDisplayComponent from "./TodoDisplayComponent";
 import "./TodoInputForm.css";
+import { renderTodoDisplayComponentContext } from "../pages/Dashboard";
 
 export const todoListContext = React.createContext(null);
 
@@ -23,56 +24,57 @@ function TodoInputForm() {
   const [addNewCategoryStatus, setAddNewCategoryStatus] = useState(false);
   const [addNewMilestoneStatus, setAddNewMilestoneStatus] = useState(false);
   const [milestoneList, setMilestoneList] = useState([]);
-  const [milestoneListStatus, setMilestoneListStatus] = useState([]);
 
   const [currentDate, setNewDate] = useState(null);
   const [quote, setQuote] = useState(null);
 
-  // const [credentials] = useContext(credentialsContext);
-  // const todo_postToServer = (newTodoList) => {
-  //   fetch("http://localhost:4000/todo", {
-  //     method: "POST",
-  //     headers: {
-  //       "Content-Type": "application/json",
-  //       Authorization: `Basic ${credentials.username}:${credentials.password}`,
-  //     },
-  //     body: JSON.stringify(newTodoList),
-  //   }).then(() => {});
-  // };
+  const [credentials] = useContext(credentialsContext);
+  const [renderTodoDisplay, setRenderTodoDisplay] = useContext(renderTodoDisplayComponentContext);
 
-  // useEffect(() => {
-  //   fetch("http://localhost:4000/todo", {
-  //     method: "GET",
-  //     headers: {
-  //       "Content-Type": "application/json",
-  //       'Authorization': `Basic ${credentials.username}:${credentials.password}`
-  //     }
-  //   })
-  //   .then((response) => response.json())
-  //   .then(findUserAndTodoList => setTodoList(findUserAndTodoList))
-  // }, [])
+  const todo_postToServer = (newTodoList) => {
+    fetch("http://localhost:4000/todo", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Basic ${credentials.userName}:${credentials.password}`,
+      },
+      body: JSON.stringify(newTodoList),
+    }).then(() => {});
+  };
 
-  // const category_postToServer = (newCategoriesList) => {
-  //   fetch("http://localhost:4000/todo_categories", {
-  //     method: "POST",
-  //     headers: {
-  //       "Content-Type": "application/json",
-  //       Authorization: `Basic ${credentials.username}:${credentials.password}`,
-  //     },
-  //     body: JSON.stringify(newCategoriesList),
-  //   }).then(() => {});
-  // };
-  // useEffect(() => {
-  //   fetch("http://localhost:4000/todo_categories", {
-  //     method: "GET",
-  //     headers: {
-  //       "Content-Type": "application/json",
-  //       'Authorization': `Basic ${credentials.username}:${credentials.password}`
-  //     }
-  //   })
-  //   .then((response) => response.json())
-  //   .then(categoryList => setCategoriesList(categoryList))
-  // }, [])
+  useEffect(() => {
+    fetch("http://localhost:4000/todo", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        'Authorization': `Basic ${credentials.userName}:${credentials.password}`
+      }
+    })
+    .then((response) => response.json())
+    .then(findUserAndTodoList => setTodoList(findUserAndTodoList))
+  }, [])
+
+  const category_postToServer = (newCategoriesList) => {
+    fetch("http://localhost:4000/todo_categories", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Basic ${credentials.userName}:${credentials.password}`,
+      },
+      body: JSON.stringify(newCategoriesList),
+    }).then(() => {});
+  };
+  useEffect(() => {
+    fetch("http://localhost:4000/todo_categories", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        'Authorization': `Basic ${credentials.userName}:${credentials.password}`
+      }
+    })
+    .then((response) => response.json())
+    .then(categoryList => setCategoriesList(categoryList))
+  }, [])
 
   const handleAddNewCategory = () => {
     console.log("inside handleaddnewcategory");
@@ -81,7 +83,7 @@ function TodoInputForm() {
     setCategoriesList([...categoriesList, newCategory]);
     document.getElementById("category_text").value = "";
     setAddNewCategoryStatus(false);
-    // category_postToServer(newCategoriesList);
+    category_postToServer(newCategoriesList);
   };
   const handleAddNewMilestone = () => {
     console.log("inside handleaddnewmilestone");
@@ -101,6 +103,8 @@ function TodoInputForm() {
       "Add another Milestone";
 
     console.log(newMilestoneList);
+
+    // milestone_postToServer(newMilestoneList);
     // category_postToServer(newCategoriesList);
   };
 
@@ -126,27 +130,10 @@ function TodoInputForm() {
     document.getElementById("quote_text").value = "";
     console.log(newTodoList);
     milestone_count = 0;
+    setRenderTodoDisplay(!renderTodoDisplay);
     // console.log()
-    // todo_postToServer(newTodoList);
+    todo_postToServer(newTodoList);
   };
-
-  // const handleTaskStatus = (index, isDone) => {
-  //   const idx = index - 1;
-  //   const beforeIdxTodo = todoList.slice(0, idx);
-  //   const afterIdxTodo = todoList.slice(idx + 1);
-  //   const idxTodo = todoList.slice(idx, idx + 1);
-
-  //   if (isDone) {
-  //     idxTodo[0].taskDoneStatus = !idxTodo[0].taskDoneStatus;
-  //   } else {
-  //     idxTodo[0].taskDropStatus = !idxTodo[0].taskDropStatus;
-  //   }
-  //   const newTodoList = [...beforeIdxTodo, ...idxTodo, ...afterIdxTodo];
-  //   console.log(todoList);
-  //   console.log(newTodoList);
-  //   setTodoList(newTodoList);
-  //   // todo_postToServer(newTodoList);
-  // };
 
   return (
     <>
@@ -186,7 +173,7 @@ function TodoInputForm() {
               id="category_text"
               placeholder="Enter a new Category"
             ></input>
-            <button onClick={handleAddNewCategory}>add new category</button>
+            <button onClick={handleAddNewCategory}>add a new category</button>
             <button onClick={() => setAddNewCategoryStatus(false)}>
               Close
             </button>
@@ -232,8 +219,14 @@ function TodoInputForm() {
         )}
         <br></br>
         <br />
+
+
+
+
+
+
         <div className="form_preview">
-          <h4>FORM REVIEW</h4>
+          <h4>FORM pREVIEW</h4>
           {currentCategory && <h5>Selected Category: {currentCategory}</h5>}
           {quote && <p>Added Goal: {quote}</p>}
           {currentDate && (
@@ -251,25 +244,10 @@ function TodoInputForm() {
           )}
         </div>
 
-        <br />
-        <br></br>
         <button type="submit">Add Todo</button>
       </form>
-
-      <br />
-      {/* <DisplayTodoList todoList={todoList}></DisplayTodoList> */}
-      <br />
-      <h3>stop thinking & start doing</h3>
-      <br />
-      <br />
-
-      <h2>List of all TODO's</h2>
       
-      <todoListContext.Provider value={[todoList, setTodoList]}>
-        <h5>inside components</h5>
-        <TodoDisplayComponent></TodoDisplayComponent>
-      </todoListContext.Provider>
-      <h5>end of components</h5>
+      
     </>
   );
 }
